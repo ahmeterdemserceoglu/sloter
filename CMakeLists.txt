@@ -10,18 +10,23 @@ if(ANDROID)
     set(CMAKE_ANDROID_STL_TYPE c++_shared)
 endif()
 
-# Find required packages
+# Find required packages for desktop build
 if(NOT ANDROID)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBPQ REQUIRED libpq)
     find_package(OpenSSL REQUIRED)
     find_package(CURL REQUIRED)
+    find_package(OpenGL REQUIRED)
     
     # Find jsoncpp
     find_path(JSONCPP_INCLUDE_DIR json/json.h
         PATHS /usr/include/jsoncpp /usr/local/include/jsoncpp)
     find_library(JSONCPP_LIBRARY jsoncpp
-        PATHS /usr/lib /usr/local/lib)
+        PATHS /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu)
+    
+    if(NOT JSONCPP_INCLUDE_DIR OR NOT JSONCPP_LIBRARY)
+        message(FATAL_ERROR "jsoncpp not found. Please install libjsoncpp-dev")
+    endif()
 endif()
 
 # Include directories
@@ -67,7 +72,6 @@ if(ANDROID)
     )
 else()
     # Desktop libraries
-    find_package(OpenGL REQUIRED)
     target_link_libraries(SlotMachine 
         ${OPENGL_LIBRARIES}
         ${LIBPQ_LIBRARIES}
@@ -75,27 +79,14 @@ else()
         ${OPENSSL_LIBRARIES}
         ${CURL_LIBRARIES}
         pthread
-        crypto
-        ssl
     )
     
-    # Add library directories
+    # Add library directories and compile flags
     target_link_directories(SlotMachine PRIVATE ${LIBPQ_LIBRARY_DIRS})
-endif()
-
-# Compiler flags
-if(NOT ANDROID)
     target_compile_options(SlotMachine PRIVATE ${LIBPQ_CFLAGS_OTHER})
 endif()
 
 # Install rules
 if(NOT ANDROID)
     install(TARGETS SlotMachine DESTINATION bin)
-    
-    # Install database setup script
-    install(FILES database/setup_database.sh 
-            DESTINATION share/slotmachine
-            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
-                       GROUP_READ GROUP_EXECUTE
-                       WORLD_READ WORLD_EXECUTE)
 endif()

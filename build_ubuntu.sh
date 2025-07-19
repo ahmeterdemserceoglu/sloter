@@ -5,19 +5,19 @@ echo "=== Building Slot Machine for Ubuntu ==="
 # Check if dependencies are installed
 echo "Checking dependencies..."
 
-# Check for required packages
-REQUIRED_PACKAGES=("cmake" "g++" "libpq-dev" "libssl-dev" "libjsoncpp-dev" "libcurl4-openssl-dev")
-MISSING_PACKAGES=()
+# Check for essential commands
+if ! command -v cmake &> /dev/null; then
+    echo "cmake not found. Please run: ./install_dependencies.sh"
+    exit 1
+fi
 
-for package in "${REQUIRED_PACKAGES[@]}"; do
-    if ! dpkg -l | grep -q "^ii  $package "; then
-        MISSING_PACKAGES+=("$package")
-    fi
-done
+if ! command -v g++ &> /dev/null; then
+    echo "g++ not found. Please run: ./install_dependencies.sh"
+    exit 1
+fi
 
-if [ ${#MISSING_PACKAGES[@]} -ne 0 ]; then
-    echo "Missing required packages: ${MISSING_PACKAGES[*]}"
-    echo "Please run: ./install_dependencies.sh"
+if ! pkg-config --exists libpq; then
+    echo "libpq-dev not found. Please run: ./install_dependencies.sh"
     exit 1
 fi
 
